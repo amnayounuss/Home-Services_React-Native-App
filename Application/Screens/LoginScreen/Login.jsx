@@ -1,8 +1,29 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from "expo-web-browser";
+import { useOAuth } from "@clerk/clerk-expo";
+import { useWarmUpBrowser } from "@/Application/hooks/warmUpBroswer"
+WebBrowser.maybeCompleteAuthSession();
 import Colors from '../../Utils/Colors'; // Adjust the path if necessary
 
 export default function Login() {
+  useWarmUpBrowser();
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const onPress = React.useCallback(async () => {
+    try {
+      const { createdSessionId, signIn, signUp, setActive } =
+        await startOAuthFlow({ redirectUrl: Linking.createURL("/dashboard", { scheme: "myapp" }) });
+
+      if (createdSessionId) {
+        setActive({ session: createdSessionId });
+      } else {
+        // Use signIn or signUp for next steps such as MFA
+      }
+    } catch (err) {
+      console.error("OAuth error", err);
+    }
+  }, []);
   return (
     <View style={{ alignItems: 'center' }}>
       <Image
@@ -19,7 +40,7 @@ export default function Login() {
         <Text style={{fontSize:17, color:Colors.WHITE, textAlign: 'center', marginTop: 20, padding: 10}}>Best App to find services near you which deliver you a profesional service</Text>
       
       <TouchableOpacity style={styles.button}
-      onPress={()=>console.log("Button Click")}>
+      onPress={onPress}>
         <Text style={{textAlign: 'center', fontSize: 17, color: Colors.PRIMARY}}>Let's Get Started</Text>
       </TouchableOpacity>
       </View>
